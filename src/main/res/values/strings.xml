@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">SCD</string>
+    <string name="username">Usuário:</string>
+    <string name="password">Senha:</string>
+    <string name="logo_description">Logomarca Eletronuclear</string>
+    <string name="btn_login">Entrar no Sistema</string>
+    <string name="btn_config">Configurações</string>
+    <string name="version">Versão:</string>
+    <string name="area">Área:</string>
+</resources>
