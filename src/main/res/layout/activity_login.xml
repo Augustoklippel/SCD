@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".LoginActivity">
+    tools:context=".layout.LoginActivity">
 
     <Space
         android:layout_width="match_parent"
@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:paddingVertical="10dp"
         android:paddingHorizontal="10dp"
-        android:hint="@string/username"
+        android:hint="@string/number_employee"
         app:hintAnimationEnabled="true"
         app:hintTextColor="@color/custom_secondary"
         app:backgroundTint="?attr/colorSecondary"
@@ -61,7 +61,8 @@
             android:id="@+id/password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword" />
+            android:inputType="numberPassword"
+            android:digits="0123456789" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -98,7 +99,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text=""
-        android:textSize="22sp"
+        android:textSize="23sp"
+        android:textColor="@color/custom_secondary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

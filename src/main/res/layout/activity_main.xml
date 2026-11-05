@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".layout.MainActivity">
 
     <Space
         android:layout_width="match_parent"
@@ -26,7 +26,7 @@
         android:layout_height="60dp" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_login"
+        android:id="@+id/btn_access"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/btn_login"
@@ -35,6 +35,19 @@
         app:icon="@drawable/account_24"
         app:iconPadding="10dp"
         android:textSize="20sp"
+        app:iconGravity="textStart"
+        app:iconSize="36dp" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_reader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_reader"
+        style="@style/Widget.Material3.Button.IconButton.Filled"
+        android:padding="18dp"
+        app:icon="@drawable/scanner_24"
+        app:iconPadding="10dp"
+        android:textSize="20sp"
+        android:visibility="gone"
         app:iconGravity="textStart"
         app:iconSize="36dp" />
 
@@ -73,7 +86,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text=""
-        android:textSize="22sp"
+        android:textColor="@color/custom_secondary"
+        android:textSize="23sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -94,7 +108,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text=""
-        android:textSize="22sp"
+        android:textSize="23sp"
+        android:textColor="@color/custom_secondary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -115,7 +130,30 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text=""
+        android:textSize="23sp"
+        android:textColor="@color/custom_secondary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:textAlignment="center"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/number_coletor"
         android:textSize="22sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:textAlignment="center"/>
+    <TextView
+        android:id="@+id/tv_num_coletor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="23sp"
+        android:textColor="@color/custom_secondary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

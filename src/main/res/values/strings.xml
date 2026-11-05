@@ -1,10 +1,20 @@
 <resources>
     <string name="app_name">SCD</string>
     <string name="username">Usuário:</string>
+    <string name="number_employee">Matrícula:</string>
     <string name="password">Senha:</string>
     <string name="logo_description">Logomarca Eletronuclear</string>
     <string name="btn_login">Entrar no Sistema</string>
-    <string name="btn_config">Configurações</string>
+    <string name="btn_area">Definir Área</string>
+    <string name="btn_number_update">Nº Coletor</string>
+    <string name="number_coletor">Nº Coletor:</string>
+    <string name="btn_data_update">Alterar Leituras</string>
+    <string name="btn_config">Utilitários</string>
+    <string name="btn_data">Dados</string>
+    <string name="btn_sync">Sincronizar</string>
+    <string name="btn_update">Alterar</string>
+    <string name="btn_coletor">Salvar Número</string>
     <string name="version">Versão:</string>
     <string name="area">Área:</string>
+    <string name="btn_reader">Realizar Leituras</string>
 </resources>
