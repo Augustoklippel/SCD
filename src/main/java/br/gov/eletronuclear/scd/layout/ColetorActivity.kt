@@ -41,6 +41,7 @@ class ColetorActivity : AppCompatActivity() {
             updateNumberColetor(numColetor.text.toString())
             Toast.makeText(this, "O número do coletor foi atualizado!", Toast.LENGTH_SHORT).show()
             startActivity(intent)
+            finish()
         }
         lifecycleScope.launch {
             val db = AppDatabase.getDatabase(applicationContext)

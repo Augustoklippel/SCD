@@ -7,14 +7,15 @@ import androidx.room3.RoomDatabase
 import androidx.sqlite.driver.AndroidSQLiteDriver
 
 @Database(
-    entities = [User::class, Setting::class, Area::class],
-    version = 2,
+    entities = [User::class, Setting::class, Area::class, Bed::class],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDAO
     abstract fun settingDao(): SettingDAO
     abstract fun areaDao(): AreaDAO
+    abstract fun bedDao(): BedDAO
 
     companion object {
         @Volatile

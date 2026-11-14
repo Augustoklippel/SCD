@@ -17,4 +17,5 @@
     <string name="version">Versão:</string>
     <string name="area">Área:</string>
     <string name="btn_reader">Realizar Leituras</string>
+    <string name="sync_message">Processando dados, por favor aguarde...</string>
 </resources>

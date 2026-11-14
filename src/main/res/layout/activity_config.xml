@@ -59,10 +59,12 @@
         android:padding="18dp"
         android:text="@string/btn_sync"
         android:textSize="20sp"
-        app:icon="@drawable/database_24"
+        app:icon="@drawable/sync_24"
         app:iconGravity="textStart"
         app:iconPadding="10dp"
         app:iconSize="36dp"
+        app:backgroundTint="?attr/colorSecondary"
+        android:textColor="?attr/colorOnSecondary"
         app:iconTint="?attr/colorOnSecondary" />
 
     <com.google.android.material.button.MaterialButton
