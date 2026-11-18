@@ -6,6 +6,6 @@ import androidx.room3.PrimaryKey
 
 @Entity(tableName = "area")
 data class Area(
-    @PrimaryKey @ColumnInfo(name = "area_id") val idArea: Int = 0,
+    @PrimaryKey @ColumnInfo(name = "area_id") val idArea: String,
     @ColumnInfo(name = "area_name") val areaName: String
 )

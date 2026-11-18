@@ -23,7 +23,9 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.MutableLiveData
 import br.gov.eletronuclear.scd.network.BluetoothRfcommClient
+import br.gov.eletronuclear.scd.file.SaveFile
 
 class ConfigActivity : AppCompatActivity() {
 
@@ -53,6 +55,10 @@ class ConfigActivity : AppCompatActivity() {
                 ).show()
             }
         }
+    private val message_received = MutableLiveData<String>()
+    private val status_message = MutableLiveData<String>()
+
+    private val saveFile = SaveFile(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_SCD)
@@ -104,6 +110,31 @@ class ConfigActivity : AppCompatActivity() {
                 btnDados.isEnabled = true
             }
         }
+        message_received.observe(this@ConfigActivity) { newMessage ->
+            if (newMessage.substring(0,3) == "ACK") {
+                Log.d("MensagemBL","Recebi o retorno do ACK!")
+                bluetoothClient.sendMessage("STR0?")
+            }else if (newMessage.substring(0,5) == "STR0=") {
+                status_message.value = "Recebendo arquivo de Áreas"
+                Log.d("MensagemBL","Recebendo o arquivo de Áreas!")
+                saveFile.saveFileToDownloads("areas.json", newMessage.substring(5, newMessage.indexOf("#EOF")).unescapeUnicode().toByteArray())
+                bluetoothClient.sendMessage("STR0!")
+                bluetoothClient.sendMessage("STR1?")
+            }else if (newMessage.substring(0,5) == "STR1=") {
+                status_message.value = "Recebendo arquivo de Usuários"
+                Log.d("MensagemBL","Recebendo o arquivo de Usuários!")
+                saveFile.saveFileToDownloads("usuarios.json", newMessage.substring(5, newMessage.indexOf("#EOF")).unescapeUnicode().toByteArray())
+                bluetoothClient.sendMessage("STR1!")
+                bluetoothClient.sendMessage("STR2?")
+            }else if (newMessage.substring(0,5) == "STR2=") {
+                status_message.value = "Recebendo arquivo de Berços"
+                Log.d("MensagemBL","Recebendo o arquivo de Berços!")
+                saveFile.saveFileToDownloads("bercos.json", newMessage.substring(5, newMessage.indexOf("#EOF")).unescapeUnicode().toByteArray())
+                bluetoothClient.sendMessage("STR2!")
+                //bluetoothClient.sendMessage("STR2?")
+            }
+            //Toast.makeText(this, newMessage, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun solicitarPermissaoBluetooth() {
@@ -117,6 +148,14 @@ class ConfigActivity : AppCompatActivity() {
                     android.Manifest.permission.BLUETOOTH_CONNECT
                 )
             }
+        }
+    }
+
+    fun String.unescapeUnicode(): String {
+        val regex = Regex("\\\\u([0-9a-fA-F]{4})")
+        return regex.replace(this) { matchResult ->
+            val hexCode = matchResult.groupValues[1]
+            hexCode.toInt(16).toChar().toString()
         }
     }
 
@@ -137,12 +176,16 @@ class ConfigActivity : AppCompatActivity() {
                 override fun onConnected() {
                     runOnUiThread {
                         println("Conectado ao Windows!")
+                        Log.d("MensagemBL","Enviando um ACK")
+                        bluetoothClient.sendMessage("ACK")
                     }
                 }
 
                 override fun onMessage(message: String) {
                     runOnUiThread {
                         println("Windows: $message")
+                        message_received.value = message
+                        //bluetoothClient.sendMessage("Olá, Windows!")
                     }
                 }
 
@@ -193,7 +236,7 @@ class ConfigActivity : AppCompatActivity() {
     //@RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun execSync(){
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Sincronização andamento")
+        builder.setTitle("Sincronização em andamento")
 
         val inflation = LayoutInflater.from(this)
         val viewModal = inflation.inflate(R.layout.dialog_progress, null)
@@ -208,24 +251,19 @@ class ConfigActivity : AppCompatActivity() {
         val dialog = builder.create()
         dialog.show()
 
+        connectBed()
+        Log.d("MensagemBL","Solicitada a conexão")
 
-
-        lifecycleScope.launch {
-            connectBed()
-            delay(3000)
-            viewMessage.text = "Procurando o berço...."
-            delay(3000)
-            viewMessage.text = "Conectando ao berço...."
-            delay(3000)
-            if(grantedBluetooth == false){
-                Toast.makeText(this@ConfigActivity, "Permissão Bluetooth necessária", Toast.LENGTH_LONG).show()
-                bluetoothClient.sendMessage("Olá, Berço 1 !")
-                dialog.dismiss()
-            }else{
-                Toast.makeText(this@ConfigActivity, "Sincronização concluída", Toast.LENGTH_LONG).show()
-                bluetoothClient.sendMessage("Olá, Berço 2 !")
-                dialog.dismiss()
-            }
+        status_message.observe(this@ConfigActivity) { statusMessage ->
+            viewMessage.text = statusMessage.toString()
         }
+        //lifecycleScope.launch {
+        //    connectBed()
+        //    message_received.observe(this@ConfigActivity) { newMessage ->
+        //        if (newMessage != null) {
+        //
+        //        }
+        //    }
+        //}
     }
 }
