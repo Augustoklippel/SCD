@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "br.gov.eletronuclear.scd"
-        minSdk = 24
+        minSdk = 29
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -52,4 +52,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
     implementation(libs.androidx.annotation)
+    // Gson para leitura do JSON
+    implementation("com.google.code.gson:gson:2.10.1")
 }

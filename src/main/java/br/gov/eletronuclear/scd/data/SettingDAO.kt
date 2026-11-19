@@ -15,7 +15,7 @@ interface SettingDAO {
     suspend fun upsertSetting(setting: Setting)
 
     @Query("UPDATE setting SET user_name = :newUserName, user_id = :userId")
-    suspend fun updateUserLogged(userId: Int, newUserName: String): Int
+    suspend fun updateUserLogged(userId: String, newUserName: String): Int
 
     @Query("UPDATE setting SET col_number = :colNumber")
     suspend fun updateColNumber(colNumber: String): Int

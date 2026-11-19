@@ -76,7 +76,6 @@ class MainActivity : AppCompatActivity() {
             val userDao = db.userDao()
             userDao.insert(
                 User(
-                    idUser = 0,
                     userName = "Administrador",
                     number = "000000",
                     password = "123456",

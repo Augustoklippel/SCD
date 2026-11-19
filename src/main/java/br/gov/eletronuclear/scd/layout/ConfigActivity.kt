@@ -24,6 +24,8 @@ import android.os.Build
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.MutableLiveData
+import br.gov.eletronuclear.scd.data.User
+import br.gov.eletronuclear.scd.file.JsonToRoomImporter
 import br.gov.eletronuclear.scd.network.BluetoothRfcommClient
 import br.gov.eletronuclear.scd.file.SaveFile
 
@@ -113,27 +115,30 @@ class ConfigActivity : AppCompatActivity() {
         message_received.observe(this@ConfigActivity) { newMessage ->
             if (newMessage.substring(0,3) == "ACK") {
                 Log.d("MensagemBL","Recebi o retorno do ACK!")
-                bluetoothClient.sendMessage("STR0?")
-            }else if (newMessage.substring(0,5) == "STR0=") {
+                bluetoothClient.sendMessage("STR00?")
+            }else if (newMessage.substring(0,6) == "STR00=") {
                 status_message.value = "Recebendo arquivo de Áreas"
                 Log.d("MensagemBL","Recebendo o arquivo de Áreas!")
-                saveFile.saveFileToDownloads("areas.json", newMessage.substring(5, newMessage.indexOf("#EOF")).unescapeUnicode().toByteArray())
-                bluetoothClient.sendMessage("STR0!")
-                bluetoothClient.sendMessage("STR1?")
-            }else if (newMessage.substring(0,5) == "STR1=") {
+                saveFile.saveFileToDownloads("areas.json", newMessage.substring(6, newMessage.indexOf("#EOF")).unescapeUnicode().toByteArray())
+                bluetoothClient.sendMessage("STR00!")
+                bluetoothClient.sendMessage("STR01?")
+            }else if (newMessage.substring(0,6) == "STR01=") {
                 status_message.value = "Recebendo arquivo de Usuários"
                 Log.d("MensagemBL","Recebendo o arquivo de Usuários!")
-                saveFile.saveFileToDownloads("usuarios.json", newMessage.substring(5, newMessage.indexOf("#EOF")).unescapeUnicode().toByteArray())
-                bluetoothClient.sendMessage("STR1!")
-                bluetoothClient.sendMessage("STR2?")
-            }else if (newMessage.substring(0,5) == "STR2=") {
+                saveFile.saveFileToDownloads("usuarios.json", newMessage.substring(6, newMessage.indexOf("#EOF")).unescapeUnicode().toByteArray())
+                bluetoothClient.sendMessage("STR01!")
+                bluetoothClient.sendMessage("STR02?")
+            }else if (newMessage.substring(0,6) == "STR02=") {
                 status_message.value = "Recebendo arquivo de Berços"
                 Log.d("MensagemBL","Recebendo o arquivo de Berços!")
-                saveFile.saveFileToDownloads("bercos.json", newMessage.substring(5, newMessage.indexOf("#EOF")).unescapeUnicode().toByteArray())
-                bluetoothClient.sendMessage("STR2!")
-                //bluetoothClient.sendMessage("STR2?")
+                saveFile.saveFileToDownloads("bercos.json", newMessage.substring(6, newMessage.indexOf("#EOF")).unescapeUnicode().toByteArray())
+                bluetoothClient.sendMessage("STR02!")
+                //Essa teem que ser a enviado antes do último envio!
+                bluetoothClient.sendMessage("STR99?")
+            }else if (newMessage.substring(0,6) == "STR99!") {
+                status_message.value = "Gravando arquivos no coletor"
+                bluetoothClient.disconnect()
             }
-            //Toast.makeText(this, newMessage, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -255,6 +260,20 @@ class ConfigActivity : AppCompatActivity() {
         Log.d("MensagemBL","Solicitada a conexão")
 
         status_message.observe(this@ConfigActivity) { statusMessage ->
+            if(statusMessage.toString() == "Gravando arquivos no coletor"){
+                val importer = JsonToRoomImporter(this@ConfigActivity)
+                val db = AppDatabase.getDatabase(applicationContext)
+                var total_users = 0
+                lifecycleScope.launch {
+                    total_users = importer.importar(
+                        nomeArquivo = "usuarios.json",
+                        entidade = User::class.java,
+                        inserir = { lista -> db.userDao().insertAll(lista) }
+                    )
+                    Toast.makeText( this@ConfigActivity, "Gravados $total_users registros na tabela usuários.", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss()
+            }
             viewMessage.text = statusMessage.toString()
         }
         //lifecycleScope.launch {

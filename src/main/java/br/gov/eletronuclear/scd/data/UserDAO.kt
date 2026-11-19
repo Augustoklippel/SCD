@@ -3,6 +3,7 @@ package br.gov.eletronuclear.scd.data
 import androidx.room3.Dao
 import androidx.room3.Delete
 import androidx.room3.Insert
+import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
 import androidx.room3.Upsert
 
@@ -10,9 +11,6 @@ import androidx.room3.Upsert
 interface UserDAO{
     @Query("SELECT * FROM user")
     suspend fun getAll(): List<User>
-
-    @Query("SELECT * FROM user WHERE user_id IN (:userId)")
-    suspend fun findById(userId: Int): User
 
     @Query(
         """
@@ -30,13 +28,16 @@ interface UserDAO{
     )
     suspend fun findByName(name: String): User?
 
-    @Insert
-    suspend fun insertAll(vararg users: User)
+    //@Insert
+    //suspend fun insertAll(vararg users: User)
 
     @Upsert
     suspend fun insert(user: User)
 
     @Delete
     suspend fun delete(user: User)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(users: List<User>)
 
 }

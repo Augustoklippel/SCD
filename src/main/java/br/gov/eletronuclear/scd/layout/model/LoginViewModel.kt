@@ -26,7 +26,7 @@ class LoginViewModel(private val userDao: UserDAO, private val settingDao: Setti
                 if (userLogado.password == passwdInput) {
                     _loginSuccess.value = true
                     _userLogged.value = userLogado
-                    settingDao.updateUserLogged(userLogado.idUser, userLogado.userName)
+                    settingDao.updateUserLogged(userLogado.number, userLogado.userName)
                 } else {
                     _loginSuccess.value = false
                 }
