@@ -2,6 +2,7 @@ package br.gov.eletronuclear.scd.network
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
+import android.util.Log
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.Executors
@@ -39,7 +40,7 @@ class BluetoothRfcommClient(
      * Tenta conectar aos servidores Windows em ordem.
      * Interrompe a busca no primeiro que aceitar a conexão.
      */
-    fun connectToFirstAvailable(macAddresses: List<String>) {
+    fun connectToFirstAvailable(macAddresses: MutableList<String>) {
 
         connectExecutor.execute {
 
@@ -49,6 +50,7 @@ class BluetoothRfcommClient(
 
                 try {
                     listener.onError("Tentando conectar ao Windows: $mac")
+                    Log.d("MensagemBL","Tentando conectar ao Windows: $mac")
 
                     // Obtém o dispositivo pelo MAC
                     val remoteDevice = adapter.getRemoteDevice(mac)

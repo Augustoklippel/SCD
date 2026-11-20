@@ -10,16 +10,16 @@
     <uses-permission
         android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />
-
     <uses-permission
         android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
 
     <!-- Android 12 ou superior -->
-    <uses-permission
-        android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
-    <uses-feature android:name="android.hardware.bluetooth" android:required="true"/>
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -30,7 +30,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.App.Starting">
-
         <activity
             android:name=".layout.MainActivity"
             android:exported="true"
@@ -60,6 +59,10 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".layout.ReaderActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".layout.SetAreaActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
     </application>

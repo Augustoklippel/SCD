@@ -39,7 +39,8 @@ class ColetorActivity : AppCompatActivity() {
         btnColetorUpdate.setOnClickListener(){
             val intent = Intent(this, MainActivity::class.java)
             updateNumberColetor(numColetor.text.toString())
-            Toast.makeText(this, "O número do coletor foi atualizado!", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(this, "O número do coletor foi atualizado!", Toast.LENGTH_SHORT).show()
+            Log.d("MensagemBL","O número do coletor foi atualizado!")
             startActivity(intent)
             finish()
         }

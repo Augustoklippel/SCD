@@ -115,10 +115,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:textAlignment="center"/>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/version"
+        android:text="@string/number_coletor"
         android:textSize="22sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -126,7 +127,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:textAlignment="center"/>
     <TextView
-        android:id="@+id/tv_version"
+        android:id="@+id/tv_num_coletor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text=""
@@ -140,7 +141,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/number_coletor"
+        android:text="@string/version"
         android:textSize="22sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -148,7 +149,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:textAlignment="center"/>
     <TextView
-        android:id="@+id/tv_num_coletor"
+        android:id="@+id/tv_version"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text=""

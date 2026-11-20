@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         val labelVersion  = findViewById<TextView>(R.id.tv_version)
         labelVersion.setText(versionName)
 
+        val labelArea  = findViewById<TextView>(R.id.tv_area)
         val labelUserName  = findViewById<TextView>(R.id.tv_username)
         val labelNumColetor  = findViewById<TextView>(R.id.tv_num_coletor)
 
@@ -73,22 +74,15 @@ class MainActivity : AppCompatActivity() {
         }
         val db = AppDatabase.getDatabase(applicationContext)
         lifecycleScope.launch {
-            val userDao = db.userDao()
-            userDao.insert(
-                User(
-                    userName = "Administrador",
-                    number = "000000",
-                    password = "123456",
-                    type = 0
-                )
-            )
             val settingDao = db.settingDao().getSetting()
             if (settingDao == null) {
                 btnLogin.isEnabled = false
             }else{
+                //btnLogin.isEnabled = true
                 labelNumColetor.setText(settingDao.colNumber)
                 if (settingDao.userName != null) {
                     labelUserName.setText(settingDao.userName)
+                    labelArea.setText(settingDao.areaName)
                     btnLogin.visibility = Button.GONE
                     btnReader.visibility = Button.VISIBLE
                 }

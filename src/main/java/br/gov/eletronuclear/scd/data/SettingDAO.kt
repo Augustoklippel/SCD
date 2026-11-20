@@ -20,4 +20,7 @@ interface SettingDAO {
     @Query("UPDATE setting SET col_number = :colNumber")
     suspend fun updateColNumber(colNumber: String): Int
 
+    @Query("UPDATE setting SET area_name = :areaName,  area_id = :areaId")
+    suspend fun updateArea(areaName: String, areaId: String): Int
+
 }

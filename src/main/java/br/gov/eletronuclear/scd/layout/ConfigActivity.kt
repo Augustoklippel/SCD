@@ -15,31 +15,26 @@ import androidx.lifecycle.lifecycleScope
 import br.gov.eletronuclear.scd.BuildConfig.VERSION_NAME
 import br.gov.eletronuclear.scd.R
 import br.gov.eletronuclear.scd.data.AppDatabase
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
+import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.MutableLiveData
+import br.gov.eletronuclear.scd.data.Area
+import br.gov.eletronuclear.scd.data.Bed
 import br.gov.eletronuclear.scd.data.User
 import br.gov.eletronuclear.scd.file.JsonToRoomImporter
 import br.gov.eletronuclear.scd.network.BluetoothRfcommClient
 import br.gov.eletronuclear.scd.file.SaveFile
+import kotlin.collections.listOf
 
 class ConfigActivity : AppCompatActivity() {
 
     private lateinit var bluetoothClient: BluetoothRfcommClient
 
-    private val windowsMacAddresses = listOf(
-        "AA:BB:CC:DD:EE:01",
-        "00:1A:7D:DA:71:13",
-        "AA:BB:CC:DD:EE:03",
-        "A0:A8:CD:5E:51:DB",
-        "5C:F3:70:87:BC:13"
-    )
+    private lateinit var windowsMacAddresses: MutableList<String>
 
     private var grantedBluetooth: Boolean = false
     private val bluetoothPermission =
@@ -83,12 +78,13 @@ class ConfigActivity : AppCompatActivity() {
             startActivity(intent)
         }
         val btnArea = findViewById<Button>(R.id.btn_area)
-        //btnArea.setOnClickListener(){
-        //    val intent = Intent(this, AreaActivity::class.java)
-        //    startActivity(intent)
-        //}
+        btnArea.setOnClickListener(){
+            val intent = Intent(this, SetAreaActivity::class.java)
+            startActivity(intent)
+        }
         val btnSync = findViewById<Button>(R.id.btn_sync)
         btnSync.setOnClickListener(){
+            windowsMacAddresses = getMacAddress()
             showPopupModal()
         }
         val btnDados = findViewById<Button>(R.id.btn_data)
@@ -156,6 +152,40 @@ class ConfigActivity : AppCompatActivity() {
         }
     }
 
+    private fun getMacAddress() : MutableList<String> {
+        val db = AppDatabase.getDatabase(applicationContext)
+        var list_result: MutableList<String> = mutableListOf()
+        lifecycleScope.launch {
+            val bedDao = db.bedDao().getAll()
+            if (bedDao.isNotEmpty()) {
+                for (bed in bedDao) {
+                    list_result += bed.macAddress.uppercase()
+                    Log.d("MensagemBL","Gravando o Mac Address " + bed.macAddress.uppercase() + " !")
+                }
+            }else{
+                showInputBox(this@ConfigActivity) { macAddress ->
+                    list_result += macAddress.uppercase()
+                    Log.d("MensagemBL","Informando o Mac Address $macAddress !")
+                }
+            }
+        }
+        return list_result
+    }
+
+    fun showInputBox(context: android.content.Context, onResult: (String) -> Unit) {
+        val editText = EditText(context).apply {
+            hint = "AA:BB:CC:DD:EE:FF"
+        }
+
+        AlertDialog.Builder(context)
+            .setTitle("Informe o Mac Address")
+            .setView(editText)
+            .setPositiveButton("Confirmar") { _, _ ->
+                onResult(editText.text.toString())
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
     fun String.unescapeUnicode(): String {
         val regex = Regex("\\\\u([0-9a-fA-F]{4})")
         return regex.replace(this) { matchResult ->
@@ -226,7 +256,7 @@ class ConfigActivity : AppCompatActivity() {
         builder.setMessage("Iniciar o processo de sincronização do coletor.")
 
         builder.setPositiveButton("Iniciar") { dialog, _ ->
-            // Iniciar a sincronizaçãoToast.makeText(this, "Iniciar Sincronização", Toast.LENGTH_SHORT).show()
+            // Iniciar a sincronização
             execSync()
         }
 
@@ -240,6 +270,7 @@ class ConfigActivity : AppCompatActivity() {
     }
     //@RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun execSync(){
+        //val macWindows = windowsMacAddresses.get(0)
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Sincronização em andamento")
 
@@ -263,26 +294,43 @@ class ConfigActivity : AppCompatActivity() {
             if(statusMessage.toString() == "Gravando arquivos no coletor"){
                 val importer = JsonToRoomImporter(this@ConfigActivity)
                 val db = AppDatabase.getDatabase(applicationContext)
+                val delFile: SaveFile = SaveFile(this@ConfigActivity)
                 var total_users = 0
+                var total_beds = 0
+                var total_areas = 0
                 lifecycleScope.launch {
                     total_users = importer.importar(
                         nomeArquivo = "usuarios.json",
                         entidade = User::class.java,
                         inserir = { lista -> db.userDao().insertAll(lista) }
                     )
-                    Toast.makeText( this@ConfigActivity, "Gravados $total_users registros na tabela usuários.", Toast.LENGTH_SHORT).show()
+                    delFile.deleteFromDownloads("usuarios.json")
+                    //Toast.makeText( this@ConfigActivity, "Gravados $total_users registros na tabela usuários.", Toast.LENGTH_SHORT).show()
+                    Log.d("MensagemBL","Gravados $total_users registros na tabela usuários.")
+                    total_beds = importer.importar(
+                        nomeArquivo = "bercos.json",
+                        entidade = Bed::class.java,
+                        inserir = { lista -> db.bedDao().insertAll(lista) }
+                    )
+                    delFile.deleteFromDownloads("bercos.json")
+                    //Toast.makeText( this@ConfigActivity, "Gravados $total_beds registros na tabela Berços.", Toast.LENGTH_SHORT).show()
+                    Log.d("MensagemBL","Gravados $total_beds registros na tabela Berços.")
+                    total_areas = importer.importar(
+                        nomeArquivo = "areas.json",
+                        entidade = Area::class.java,
+                        inserir = { lista -> db.areaDao().insertAll(lista) }
+                    )
+                    delFile.deleteFromDownloads("areas.json")
+                    //Toast.makeText( this@ConfigActivity, "Gravados $total_areas registros na tabela Áreas.", Toast.LENGTH_SHORT).show()
+                    Log.d("MensagemBL","Gravados $total_areas registros na tabela Áreas.")
                 }
                 dialog.dismiss()
+                Toast.makeText(this, "Sincronização finalizada com sucesso!", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+                finish()
             }
             viewMessage.text = statusMessage.toString()
         }
-        //lifecycleScope.launch {
-        //    connectBed()
-        //    message_received.observe(this@ConfigActivity) { newMessage ->
-        //        if (newMessage != null) {
-        //
-        //        }
-        //    }
-        //}
     }
 }
