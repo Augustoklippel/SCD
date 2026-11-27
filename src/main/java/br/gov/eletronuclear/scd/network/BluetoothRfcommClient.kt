@@ -1,8 +1,13 @@
 package br.gov.eletronuclear.scd.network
 
+import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import androidx.annotation.RequiresPermission
+import kotlinx.coroutines.delay
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.Executors
@@ -40,6 +45,7 @@ class BluetoothRfcommClient(
      * Tenta conectar aos servidores Windows em ordem.
      * Interrompe a busca no primeiro que aceitar a conexão.
      */
+    //@RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     fun connectToFirstAvailable(macAddresses: MutableList<String>) {
 
         connectExecutor.execute {
@@ -49,6 +55,7 @@ class BluetoothRfcommClient(
                 var candidateSocket: BluetoothSocket? = null
 
                 try {
+                    // adapter.cancelDiscovery()
                     listener.onError("Tentando conectar ao Windows: $mac")
                     Log.d("MensagemBL","Tentando conectar ao Windows: $mac")
 
@@ -102,7 +109,7 @@ class BluetoothRfcommClient(
      */
     private fun receiveMessages() {
 
-        val buffer = ByteArray(1024)
+        val buffer = ByteArray(128)
         val messageBuffer = StringBuilder()
 
         try {
@@ -179,8 +186,10 @@ class BluetoothRfcommClient(
                     bluetoothSocket.outputStream.write(
                         (message + "\n").toByteArray(Charsets.UTF_8)
                     )
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        bluetoothSocket.outputStream.flush()
+                    }, 500L)
 
-                    bluetoothSocket.outputStream.flush()
                 }
 
             } catch (e: IOException) {

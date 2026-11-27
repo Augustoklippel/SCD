@@ -18,4 +18,10 @@
     <string name="area">Área:</string>
     <string name="btn_reader">Realizar Leituras</string>
     <string name="sync_message">Processando dados, por favor aguarde...</string>
+    <string name="hint_codigo">Código (Code 128)</string>
+    <string name="escanear">Escanear</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="instrucao">Posicione o código de barras dentro da moldura</string>
+    <string name="permissao_negada">Permissão de câmera negada. Não é possível ler o código.</string>
+    <string name="erro_camera">Não foi possível iniciar a câmera.</string>
 </resources>

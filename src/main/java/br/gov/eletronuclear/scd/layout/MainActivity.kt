@@ -2,6 +2,7 @@ package br.gov.eletronuclear.scd.layout
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -53,7 +54,6 @@ class MainActivity : AppCompatActivity() {
         val labelUserName  = findViewById<TextView>(R.id.tv_username)
         val labelNumColetor  = findViewById<TextView>(R.id.tv_num_coletor)
 
-
         val btnLogin = findViewById<Button>(R.id.btn_access)
         btnLogin.setOnClickListener(){
             val intent = Intent(this, LoginActivity::class.java)
@@ -78,11 +78,11 @@ class MainActivity : AppCompatActivity() {
             if (settingDao == null) {
                 btnLogin.isEnabled = false
             }else{
+                labelArea.setText(settingDao.areaName)
                 //btnLogin.isEnabled = true
                 labelNumColetor.setText(settingDao.colNumber)
                 if (settingDao.userName != null) {
                     labelUserName.setText(settingDao.userName)
-                    labelArea.setText(settingDao.areaName)
                     btnLogin.visibility = Button.GONE
                     btnReader.visibility = Button.VISIBLE
                 }

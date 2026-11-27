@@ -29,6 +29,7 @@ android {
     }
     buildFeatures {
         buildConfig = true
+        viewBinding = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -37,6 +38,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.camera.mlkit.vision)
     implementation(libs.androidx.runtime)
     val room_version = "3.0.3"
     implementation("androidx.room3:room3-runtime:$room_version")
@@ -54,4 +56,14 @@ dependencies {
     implementation(libs.androidx.annotation)
     // Gson para leitura do JSON
     implementation("com.google.code.gson:gson:2.10.1")
+    // CameraX
+    val cameraxVersion = "1.3.4"
+    implementation("androidx.camera:camera-core:$cameraxVersion")
+    implementation("androidx.camera:camera-camera2:$cameraxVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
+    implementation("androidx.camera:camera-view:$cameraxVersion")
+
+    // ML Kit - leitura de código de barras (modelo embutido, funciona offline)
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    implementation("androidx.camera:camera-mlkit-vision:${cameraxVersion}")
 }

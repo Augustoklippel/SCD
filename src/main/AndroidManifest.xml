@@ -6,6 +6,11 @@
         android:name="android.hardware.bluetooth"
         android:required="true" />
 
+    <!-- Android 12 (API 31) ou superior -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+
     <!-- Android 11 ou inferior -->
     <uses-permission
         android:name="android.permission.BLUETOOTH"
@@ -16,10 +21,17 @@
 
     <!-- Android 12 ou superior -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="30" />
 
     <uses-feature
         android:name="android.hardware.bluetooth"
         android:required="true" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera.any" />
 
     <application
         android:allowBackup="true"
@@ -63,6 +75,10 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".layout.SetAreaActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".layout.ScannerActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
     </application>

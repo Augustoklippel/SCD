@@ -1,0 +1,316 @@
+package br.gov.eletronuclear.scd.network
+
+import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothSocket
+import android.util.Log
+import androidx.annotation.RequiresPermission
+import java.io.IOException
+import java.util.UUID
+import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+
+class BluetoothRfcommClient(
+    private val adapter: BluetoothAdapter,
+    private val listener: Listener,
+    /** Se true, responde "ACK" a cada mensagem recebida do servidor. */
+    private val ackOnReceive: Boolean = true
+) {
+    interface Listener {
+        fun onConnected()
+        fun onMessage(message: String)
+        fun onDisconnected()
+        fun onError(error: String)
+
+        /** Chamado quando uma nova tentativa de reconexão foi agendada. */
+        fun onReconnecting(attempt: Int, delayMs: Long) {}
+    }
+
+    companion object {
+        val SPP_UUID: UUID = UUID.fromString(
+            "00001101-0000-1000-8000-00805F9B34FB"
+        )
+
+        /** Texto enviado como confirmação. */
+        const val ACK = "ACK"
+
+        private const val RECONNECT_BASE_DELAY_MS = 2_000L
+        private const val RECONNECT_MAX_DELAY_MS = 30_000L
+    }
+
+    private val connectExecutor = Executors.newSingleThreadExecutor()
+    private val receiveExecutor = Executors.newSingleThreadExecutor()
+    private val sendExecutor = Executors.newSingleThreadExecutor()
+    private val scheduler = Executors.newSingleThreadScheduledExecutor()
+
+    private val stateLock = Any()
+    private val writeLock = Any()
+
+    @Volatile
+    private var socket: BluetoothSocket? = null
+
+    @Volatile
+    private var running = false
+
+    /** true enquanto o usuário não pediu desconexão explícita. */
+    @Volatile
+    private var autoReconnect = false
+
+    @Volatile
+    private var macList: List<String> = emptyList()
+
+    private val reconnectAttempts = AtomicInteger(0)
+    private val reconnectPending = AtomicBoolean(false)
+
+    val isConnected: Boolean
+        get() = socket?.isConnected == true
+
+    /**
+     * Tenta conectar aos servidores Windows em ordem.
+     * Interrompe a busca no primeiro que aceitar a conexão.
+     * Se a conexão cair (ou nenhum servidor responder), reconecta automaticamente
+     * com intervalo crescente, até que disconnect() seja chamado.
+     */
+    fun connectToFirstAvailable(macAddresses: List<String>) {
+        macList = macAddresses.toList()
+        autoReconnect = true
+        reconnectAttempts.set(0)
+
+        connectExecutor.execute { tryConnect() }
+    }
+
+    // ------------------------------------------------------------------
+    // Conexão
+    // ------------------------------------------------------------------
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
+    private fun tryConnect() {
+        if (!autoReconnect) return
+
+        try {
+            // Descoberta ativa deixa a conexão lenta/instável
+            adapter.cancelDiscovery()
+        } catch (_: SecurityException) {
+        }
+
+        for (mac in macList) {
+            if (!autoReconnect) return
+
+            var candidateSocket: BluetoothSocket? = null
+
+            try {
+                listener.onError("Tentando conectar ao Windows: $mac")
+                Log.d("MensagemBL", "Tentando conectar ao Windows: $mac")
+
+                val remoteDevice = adapter.getRemoteDevice(mac)
+                val newSocket = remoteDevice.createRfcommSocketToServiceRecord(SPP_UUID)
+                candidateSocket = newSocket
+
+                newSocket.connect()
+
+                synchronized(stateLock) {
+                    if (!autoReconnect) {
+                        // disconnect() foi chamado durante o connect()
+                        newSocket.close()
+                        return
+                    }
+                    socket = newSocket
+                    running = true
+                }
+
+                reconnectAttempts.set(0)
+                listener.onConnected()
+
+                receiveExecutor.execute { receiveMessages(newSocket) }
+
+                // ACK de (re)conexão: avisa o servidor que o cliente está de volta
+                sendMessage(ACK)
+                return
+
+            } catch (e: SecurityException) {
+                // Falta a permissão BLUETOOTH_CONNECT: repetir não adianta
+                autoReconnect = false
+                listener.onError("Sem permissão de Bluetooth: ${e.message}")
+                return
+
+            } catch (e: IOException) {
+                try {
+                    candidateSocket?.close()
+                } catch (_: IOException) {
+                }
+                listener.onError("Windows $mac indisponível: ${e.message}")
+            }
+        }
+
+        listener.onError("Nenhum servidor Windows disponível.")
+        scheduleReconnect()
+    }
+
+    /**
+     * Agenda uma nova tentativa com backoff exponencial (2s, 4s, 8s, 16s, 30s...).
+     */
+    private fun scheduleReconnect() {
+        if (!autoReconnect || scheduler.isShutdown) return
+        if (!reconnectPending.compareAndSet(false, true)) return
+
+        val attempt = reconnectAttempts.incrementAndGet()
+        val delayMs = minOf(
+            RECONNECT_BASE_DELAY_MS shl minOf(attempt - 1, 4),
+            RECONNECT_MAX_DELAY_MS
+        )
+
+        listener.onReconnecting(attempt, delayMs)
+
+        try {
+            scheduler.schedule({
+                reconnectPending.set(false)
+                if (autoReconnect && !isConnected) {
+                    try {
+                        connectExecutor.execute { tryConnect() }
+                    } catch (_: RejectedExecutionException) {
+                    }
+                }
+            }, delayMs, TimeUnit.MILLISECONDS)
+        } catch (_: RejectedExecutionException) {
+            reconnectPending.set(false)
+        }
+    }
+
+    /**
+     * Chamado quando a conexão cai sem o usuário ter pedido (leitura/escrita falhou
+     * ou o servidor fechou o socket). Só age uma vez por socket.
+     */
+    private fun handleConnectionLost(failed: BluetoothSocket) {
+        synchronized(stateLock) {
+            if (socket !== failed) return // já tratado ou desconexão manual
+            running = false
+            socket = null
+        }
+
+        try {
+            failed.close()
+        } catch (_: IOException) {
+        }
+
+        listener.onDisconnected()
+        scheduleReconnect()
+    }
+
+    // ------------------------------------------------------------------
+    // Recepção
+    // ------------------------------------------------------------------
+
+    private fun receiveMessages(mySocket: BluetoothSocket) {
+        val buffer = ByteArray(1024)
+        val messageBuffer = StringBuilder()
+
+        try {
+            val input = mySocket.inputStream
+
+            while (running) {
+                val bytesRead = input.read(buffer)
+
+                if (bytesRead == -1) break // servidor encerrou
+
+                messageBuffer.append(String(buffer, 0, bytesRead, Charsets.UTF_8))
+
+                while (true) {
+                    val index = messageBuffer.indexOf("\n")
+                    if (index < 0) break
+
+                    val message = messageBuffer
+                        .substring(0, index)
+                        .trimEnd('\r')
+
+                    messageBuffer.delete(0, index + 1)
+
+                    listener.onMessage(message)
+
+                    // Confirma o recebimento (sem responder a outro ACK, para evitar ping-pong)
+                    if (ackOnReceive && message != ACK) {
+                        sendMessage(ACK)
+                    }
+                }
+            }
+
+        } catch (e: IOException) {
+            if (running) {
+                listener.onError("Erro na recepção: ${e.message}")
+            }
+        }
+
+        // Se chegou aqui com running == true, a queda foi inesperada
+        if (running) {
+            handleConnectionLost(mySocket)
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Envio
+    // ------------------------------------------------------------------
+
+    fun sendMessage(message: String) {
+        try {
+            sendExecutor.execute {
+                val bluetoothSocket = socket
+
+                if (bluetoothSocket == null || !bluetoothSocket.isConnected) {
+                    listener.onError("Não conectado.")
+                    return@execute
+                }
+
+                try {
+                    synchronized(writeLock) {
+                        bluetoothSocket.outputStream.write(
+                            (message + "\n").toByteArray(Charsets.UTF_8)
+                        )
+                        bluetoothSocket.outputStream.flush()
+                    }
+                } catch (e: IOException) {
+                    listener.onError("Erro no envio: ${e.message}")
+                    handleConnectionLost(bluetoothSocket)
+                }
+            }
+        } catch (_: RejectedExecutionException) {
+            // shutdown() já foi chamado
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Encerramento
+    // ------------------------------------------------------------------
+
+    /**
+     * Desconexão pedida pelo usuário: NÃO reconecta.
+     */
+    fun disconnect() {
+        autoReconnect = false
+        reconnectPending.set(false)
+
+        var current: BluetoothSocket? = null
+        synchronized(stateLock) {
+            running = false
+            current = socket
+            socket = null
+        }
+
+        try {
+            current?.close()
+        } catch (_: IOException) {
+        }
+
+        listener.onDisconnected()
+    }
+
+    fun shutdown() {
+        disconnect()
+
+        scheduler.shutdownNow()
+        connectExecutor.shutdownNow()
+        receiveExecutor.shutdownNow()
+        sendExecutor.shutdownNow()
+    }
+}
