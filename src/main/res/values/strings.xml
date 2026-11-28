@@ -5,6 +5,7 @@
     <string name="password">Senha:</string>
     <string name="logo_description">Logomarca Eletronuclear</string>
     <string name="btn_login">Entrar no Sistema</string>
+    <string name="change_login">Alterar Usuário</string>
     <string name="btn_area">Definir Área</string>
     <string name="btn_number_update">Nº Coletor</string>
     <string name="number_coletor">Nº Coletor:</string>
@@ -17,10 +18,15 @@
     <string name="version">Versão:</string>
     <string name="area">Área:</string>
     <string name="btn_reader">Realizar Leituras</string>
+    <string name="code">Código</string>
+    <string name="number">Número:</string>
+    <string name="description">Descrição:</string>
+    <string name="read_code">Ler Código</string>
     <string name="sync_message">Processando dados, por favor aguarde...</string>
     <string name="hint_codigo">Código (Code 128)</string>
     <string name="escanear">Escanear</string>
     <string name="cancelar">Cancelar</string>
+    <string name="flahslight">Ligar Lanterna</string>
     <string name="instrucao">Posicione o código de barras dentro da moldura</string>
     <string name="permissao_negada">Permissão de câmera negada. Não é possível ler o código.</string>
     <string name="erro_camera">Não foi possível iniciar a câmera.</string>

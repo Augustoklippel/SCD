@@ -13,6 +13,14 @@ interface InstrumentDAO {
     @Query("SELECT * FROM instrument")
     suspend fun getAll(): List<Instrument>
 
+    @Query(
+        """
+        SELECT * FROM instrument
+        WHERE code LIKE :code LIMIT 1
+        """
+    )
+    suspend fun findByCode(code: String): Instrument?
+
     @Upsert
     suspend fun insert(instrument: Instrument)
 

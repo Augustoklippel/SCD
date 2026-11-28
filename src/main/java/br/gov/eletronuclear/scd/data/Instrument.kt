@@ -6,7 +6,7 @@ import androidx.room3.PrimaryKey
 import com.google.gson.annotations.SerializedName
 
 @Entity(tableName = "instrument")
-data class Instrument(
+data class  Instrument(
     @PrimaryKey @ColumnInfo(name = "code") @SerializedName("codigo") val code: String,
     @ColumnInfo(name = "area_id") @SerializedName("area") val areaId: String,
     @ColumnInfo(name = "subarea_id") @SerializedName("subarea") val subAreaId: String,
